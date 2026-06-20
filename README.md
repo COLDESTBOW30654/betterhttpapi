@@ -242,10 +242,14 @@ curl -X POST \
 
 ## 技术栈
 
-- Java 21 + Gradle 8.x
+- Java 21 + Gradle 9.x
 - Eclipse Jetty 11（嵌入式 HTTP 服务）
 - Jackson 2.15（JSON 序列化）
 - Paper API 1.20.4
+
+## 注意
+
+本项目使用AI开发，如有抵触请勿使用，本项目安全性有待考量
 
 ## 作者
 
