@@ -1,0 +1,7 @@
+name: BetterHTTPAPI
+version: 1.0.0
+main: top.blym.betterhttpapi.BetterHTTPAPI
+api-version: '1.20'
+author: 白鹿原嚒
+description: HTTP API plugin for PaperMC servers
+website: https://blog.blym.top

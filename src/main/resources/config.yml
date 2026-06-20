@@ -1,0 +1,37 @@
+# BetterHTTPAPI 配置文件
+# 作者: 白鹿原嚒 (https://blog.blym.top)
+
+# ========== 安全 ==========
+api-key: "change-me-default"
+
+# 允许访问的 Host 请求头白名单（留空则不限制，生产环境建议填写）
+allowed-hosts:
+  - "localhost"
+  - "127.0.0.1"
+  - "your-domain.com"
+
+# ========== 服务器 ==========
+port: 8080
+
+# ========== 端点开关 ==========
+endpoints:
+  execute: true
+  ban: true
+  unban: true
+  status: true
+  players: true
+  kick: true
+  broadcast: true
+  stop: true
+  restart: true
+
+# ========== 跨域 ==========
+cors:
+  enabled: false
+  allowed-origins:
+    - "*"
+
+# ========== 日志 ==========
+logging:
+  enabled: true
+  log-file: "plugins/BetterHTTPAPI/api.log"
