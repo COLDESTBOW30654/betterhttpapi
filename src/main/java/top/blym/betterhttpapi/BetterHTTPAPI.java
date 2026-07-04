@@ -21,11 +21,16 @@ public final class BetterHTTPAPI extends JavaPlugin {
 
     private Server server;
     private ConfigManager configManager;
+    private PluginAPIManager pluginAPIManager;
 
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
         this.configManager = new ConfigManager(this);
+
+        // 初始化插件 API 管理器（必须先调用 init() 再获取实例）
+        PluginAPIManager.init(this);
+        this.pluginAPIManager = PluginAPIManager.getInstance();
 
         // 启动 Jetty 内嵌服务器
         try {
@@ -72,6 +77,15 @@ public final class BetterHTTPAPI extends JavaPlugin {
     }
 
     /**
+     * 获取插件 API 管理器。
+     *
+     * @return PluginAPIManager 实例
+     */
+    public PluginAPIManager getPluginAPIManager() {
+        return this.pluginAPIManager;
+    }
+
+    /**
      * 创建并启动 Jetty 服务器，注册所有 API Servlet。
      *
      * @throws Exception 如果服务器启动失败
@@ -92,6 +106,60 @@ public final class BetterHTTPAPI extends JavaPlugin {
         this.registerServlet(context, "/api/broadcast", new BroadcastServlet(this));
         this.registerServlet(context, "/api/stop", new StopServlet(this));
         this.registerServlet(context, "/api/restart", new RestartServlet(this));
+
+        // 注册新的插件 API Servlet
+        this.registerServlet(context, "/api/luckperms/check", new LuckPermsServlet(this));
+        this.registerServlet(context, "/api/luckperms/groups", new LuckPermsServlet(this));
+        this.registerServlet(context, "/api/multiverse/worlds", new MultiverseServlet(this));
+        this.registerServlet(context, "/api/multiverse/world/create", new MultiverseServlet(this));
+        this.registerServlet(context, "/api/playertitle/get", new PlayerTitleServlet(this));
+        this.registerServlet(context, "/api/playertitle/grant", new PlayerTitleServlet(this));
+        this.registerServlet(context, "/api/skins/set", new SkinsRestorerServlet(this));
+        this.registerServlet(context, "/api/residence/check", new ResidenceServlet(this));
+
+        // 注册 AuthMe Servlet
+        this.registerServlet(context, "/api/authme/registered", new AuthMeRegisteredServlet(this));
+        this.registerServlet(context, "/api/authme/authenticated", new AuthMeAuthenticatedServlet(this));
+        this.registerServlet(context, "/api/authme/register", new AuthMeRegisterServlet(this));
+        this.registerServlet(context, "/api/authme/logout", new AuthMeLogoutServlet(this));
+
+        // 注册管理端点 Admin Servlet
+        this.registerServlet(context, "/api/luckperms/admin/group/create", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/group/delete", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/player/addgroup", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/player/removegroup", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/player/addpermission", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/player/removepermission", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/group/setpermission", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/player/setprefix", new LuckPermsAdminServlet(this));
+        this.registerServlet(context, "/api/luckperms/admin/player/setsuffix", new LuckPermsAdminServlet(this));
+
+        this.registerServlet(context, "/api/multiverse/admin/world/clone", new MultiverseAdminServlet(this));
+        this.registerServlet(context, "/api/multiverse/admin/world/gamemode", new MultiverseAdminServlet(this));
+        this.registerServlet(context, "/api/multiverse/admin/world/difficulty", new MultiverseAdminServlet(this));
+        this.registerServlet(context, "/api/multiverse/admin/world/border", new MultiverseAdminServlet(this));
+        this.registerServlet(context, "/api/multiverse/admin/world/spawn", new MultiverseAdminServlet(this));
+
+        this.registerServlet(context, "/api/playertitle/admin/title/create", new PlayerTitleAdminServlet(this));
+        this.registerServlet(context, "/api/playertitle/admin/title/delete", new PlayerTitleAdminServlet(this));
+        this.registerServlet(context, "/api/playertitle/admin/title/set", new PlayerTitleAdminServlet(this));
+        this.registerServlet(context, "/api/playertitle/admin/title/revokeall", new PlayerTitleAdminServlet(this));
+
+        this.registerServlet(context, "/api/skins/admin/setforce", new SkinsAdminServlet(this));
+        this.registerServlet(context, "/api/skins/admin/clearcache", new SkinsAdminServlet(this));
+        this.registerServlet(context, "/api/skins/admin/apply", new SkinsAdminServlet(this));
+
+        this.registerServlet(context, "/api/residence/admin/create", new ResidenceAdminServlet(this));
+        this.registerServlet(context, "/api/residence/admin/delete", new ResidenceAdminServlet(this));
+        this.registerServlet(context, "/api/residence/admin/addmember", new ResidenceAdminServlet(this));
+        this.registerServlet(context, "/api/residence/admin/removemember", new ResidenceAdminServlet(this));
+        this.registerServlet(context, "/api/residence/admin/setflag", new ResidenceAdminServlet(this));
+        this.registerServlet(context, "/api/residence/admin/transfer", new ResidenceAdminServlet(this));
+
+        this.registerServlet(context, "/api/authme/admin/unregister", new AuthMeAdminServlet(this));
+        this.registerServlet(context, "/api/authme/admin/changepassword", new AuthMeAdminServlet(this));
+        this.registerServlet(context, "/api/authme/admin/forcelogin", new AuthMeAdminServlet(this));
+        this.registerServlet(context, "/api/authme/admin/email", new AuthMeAdminServlet(this));
 
         this.server.setHandler(context);
         this.server.start();

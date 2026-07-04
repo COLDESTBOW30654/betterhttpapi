@@ -2,20 +2,42 @@
 
 **PaperMC 服务器 HTTP API 管理插件** —— 通过 RESTful API 远程控制 Minecraft 服务器。
 
+当前版本：**v1.1.0** | 作者：白鹿原嚒 | 博客：[https://blog.blym.top](https://blog.blym.top)
+
 ## 功能特性
 
-- 9 个 HTTP API 端点，覆盖常用管理操作
-- API Key 认证 + Host 白名单双重安全保护
+### 基础管理
+- **执行命令** (`/api/execute`) —— 远程执行任意控制台命令
+- **玩家封禁/解封** (`/api/ban`, `/api/unban`) —— 带原因封禁/解封玩家
+- **踢出玩家** (`/api/kick`) —— 带原因踢出在线玩家
+- **广播消息** (`/api/broadcast`) —— 向全体玩家发送消息
+- **服务器状态** (`/api/status`) —— 获取 TPS、内存、在线人数等信息
+- **在线玩家列表** (`/api/players`) —— 获取在线玩家的详细信息
+- **关闭/重启服务器** (`/api/stop`, `/api/restart`) —— 远程管理服务器进程
+
+### 第三方插件集成（需对应插件安装）
+
+| 插件 | 功能 | 基础端点 | 管理端点 |
+|------|------|---------|---------|
+| **LuckPerms** | 权限检查、组管理、权限修改、前缀/后缀 | `/api/luckperms/...` | `/api/luckperms/admin/...` |
+| **Multiverse-Core** | 世界列表、创建/克隆、游戏模式/难度设置 | `/api/multiverse/...` | `/api/multiverse/admin/...` |
+| **PlayerTitle** | 称号获取/授予/创建/删除 | `/api/playertitle/...` | `/api/playertitle/admin/...` |
+| **SkinsRestorer** | 皮肤设置/重置/强制应用 | `/api/skins/...` | `/api/skins/admin/...` |
+| **Residence** | 领地检查/创建/删除、成员管理、权限标志 | `/api/residence/...` | `/api/residence/admin/...` |
+| **AuthMe** | 注册/登录检查、账户管理、密码修改 | `/api/authme/...` | `/api/authme/admin/...` |
+
+### 安全机制
+- API Key 认证（Header `X-API-Key`）
+- Host 白名单（防止外部未授权访问）
 - 每个端点可独立启用/禁用
-- 可配置的 CORS 跨域支持
-- API 调用日志记录
-- 所有 Bukkit 操作在主线程安全执行
+- CORS 跨域支持
+- 可选的 API 调用日志记录
 
 ## 快速开始
 
 ### 1. 安装
 
-将 `BetterHTTPAPI-1.0.0.jar` 放入服务器的 `plugins/` 目录，重启服务器。
+将 `BetterHTTPAPI-1.1.0.jar` 放入服务器的 `plugins/` 目录，重启服务器。
 
 ### 2. 配置
 
@@ -38,13 +60,7 @@ port: 8080
 endpoints:
   execute: true
   ban: true
-  unban: true
-  status: true
-  players: true
-  kick: true
-  broadcast: true
-  stop: true
-  restart: true
+  # ... 更多端点开关见 config.yml
 ```
 
 修改配置后可在游戏内执行 `/reload confirm` 或重启服务器使其生效。
@@ -52,162 +68,38 @@ endpoints:
 ### 3. 验证
 
 ```bash
-curl -H "X-API-Key: your-secret-key-here" http://localhost:8080/api/status
+# 获取服务器状态
+curl -H "X-API-Key: your-secret-key" http://localhost:8080/api/status
+
+# 执行命令
+curl -X POST -H "Content-Type: application/json" -H "X-API-Key: your-secret-key" \
+     -d '{"command":"say Hello"}' http://localhost:8080/api/execute
+
+# 检查玩家权限
+curl -X POST -H "Content-Type: application/json" -H "X-API-Key: your-secret-key" \
+     -d '{"player":"Steve","permission":"minecraft.command.gamemode"}' \
+     http://localhost:8080/api/luckperms/check
+
+# 获取世界列表
+curl -H "X-API-Key: your-secret-key" http://localhost:8080/api/multiverse/worlds
+
+# 检查玩家注册状态
+curl -H "X-API-Key: your-secret-key" \
+     "http://localhost:8080/api/authme/registered?player=Steve"
 ```
 
-## API 接口文档
+## 依赖插件版本要求
 
-**通用规则：**
-- 所有请求必须携带 Header `X-API-Key: <你的密钥>`
-- POST 请求使用 `Content-Type: application/json`
-- 成功响应包含 `"success": true`
+| 插件 | 最低版本 | 用途 |
+|------|---------|------|
+| LuckPerms | 5.4+ | 权限管理 |
+| Multiverse-Core | 4.3.0+ | 多世界管理 |
+| PlayerTitle | 4.8.0+ | 称号管理 |
+| SkinsRestorer | 14.x / 15.x | 皮肤管理 |
+| Residence | 5.1.4+ / 6.x | 领地管理 |
+| AuthMe | 5.6.0+ | 认证管理 |
 
----
-
-### GET /api/status — 服务器状态
-
-```bash
-curl -H "X-API-Key: your-key" http://localhost:8080/api/status
-```
-
-**响应示例：**
-```json
-{
-  "version": "1.20.4",
-  "onlinePlayers": 5,
-  "maxPlayers": 20,
-  "tps": { "tps1m": 20.0, "tps5m": 19.95, "tps15m": 19.98 },
-  "memory": { "usedMB": 2048, "maxMB": 4096, "totalMB": 3072, "freeMB": 1024 }
-}
-```
-
----
-
-### GET /api/players — 在线玩家
-
-```bash
-curl -H "X-API-Key: your-key" http://localhost:8080/api/players
-```
-
-**响应示例：**
-```json
-{
-  "success": true,
-  "count": 2,
-  "players": [
-    {
-      "name": "Steve",
-      "uuid": "8667ba71-b85a-4004-af54-457a9734eed7",
-      "world": "world",
-      "x": 128.5, "y": 64.0, "z": -32.2,
-      "health": 20.0,
-      "gameMode": "SURVIVAL",
-      "ipAddress": "192.168.1.100"
-    }
-  ]
-}
-```
-
----
-
-### POST /api/execute — 执行控制台命令
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-key" \
-  -d '{"command":"say 大家好！"}' \
-  http://localhost:8080/api/execute
-```
-
-**请求体：**
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| command | string | 是 | 控制台命令（如 `say`, `gamemode`, `give` 等） |
-
----
-
-### POST /api/ban — 封禁玩家
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-key" \
-  -d '{"player":"Steve","reason":"违规行为"}' \
-  http://localhost:8080/api/ban
-```
-
-**请求体：**
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| player | string | 是 | 玩家名称 |
-| reason | string | 否 | 封禁原因（默认 "Banned via API"） |
-
----
-
-### POST /api/unban — 解封玩家
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-key" \
-  -d '{"player":"Steve"}' \
-  http://localhost:8080/api/unban
-```
-
----
-
-### POST /api/kick — 踢出玩家
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-key" \
-  -d '{"player":"Steve","reason":"请重新登录"}' \
-  http://localhost:8080/api/kick
-```
-
----
-
-### POST /api/broadcast — 广播消息
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-key" \
-  -d '{"message":"服务器将在 5 分钟后重启！"}' \
-  http://localhost:8080/api/broadcast
-```
-
----
-
-### POST /api/stop — 关闭服务器
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-key" \
-  -d '{"message":"服务器即将关闭维护"}' \
-  http://localhost:8080/api/stop
-```
-
-> 如果提供 `message`，会先向全体玩家广播后再关闭。
-
----
-
-### POST /api/restart — 重启服务器
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: your-key" \
-  -d '{"message":"服务器即将重启，请稍候"}' \
-  http://localhost:8080/api/restart
-```
-
-> 需要 Paper/Spigot 服务端支持。
-
----
+> 以上插件均为可选依赖（softdepend），未安装时对应端点将返回插件不可用的错误。
 
 ## 错误码说明
 
@@ -217,12 +109,14 @@ curl -X POST \
 | 400 | 请求体 JSON 格式错误或缺少必填字段 |
 | 401 | API Key 缺失或不正确 |
 | 403 | Host 不在白名单中 |
-| 404 | 目标玩家不在线（/api/kick 时） |
+| 404 | 目标不存在（玩家不在线 / 权限组不存在等） |
+| 500 | 服务器内部错误（插件未加载或操作失败） |
 | 503 | 该端点已被禁用 |
 
 所有错误响应格式：
+
 ```json
-{ "success": false, "message": "错误描述" }
+{ "success": false, "error": "错误描述" }
 ```
 
 ## 安全性建议
@@ -232,24 +126,55 @@ curl -X POST \
 3. **使用 HTTPS 反向代理**：在生产环境中通过 Nginx/Caddy 等提供 SSL 加密。
 4. **按需禁用端点**：不需要的功能在 `config.yml` 中设为 `false`。
 
-## 构建
+## 常见问题
+
+### 插件加载失败？
+检查依赖插件是否已安装且版本匹配。查看服务器日志获取详细错误信息。
+
+### 返回 401 错误？
+确认请求 Header 中携带了正确的 `X-API-Key`，且与 `config.yml` 中的 `api-key` 一致。
+
+### 端点返回 503？
+检查 `config.yml` 中对应端点是否已启用（设为 `true`）。
+
+### 第三方插件端点返回错误？
+确认对应插件已安装并正常加载。使用 `/plugins` 命令查看插件状态。
+
+## 构建与开发
 
 ```bash
-./gradlew clean shadowJar
-```
+# 构建（生成胖 JAR）
+./gradlew shadowJar
 
-输出文件：`build/libs/BetterHTTPAPI-1.0.0.jar`
+# 清理构建
+./gradlew clean
+
+# 输出文件
+# build/libs/BetterHTTPAPI-1.1.0.jar
+```
 
 ## 技术栈
 
-- Java 21 + Gradle 9.x
+- Java 21 + Gradle 8.x（Kotlin DSL）
 - Eclipse Jetty 11（嵌入式 HTTP 服务）
 - Jackson 2.15（JSON 序列化）
 - Paper API 1.20.4
 
+## 更新日志
+
+### v1.1.0 (2026-07-04)
+- 新增 PluginAPIManager 统一管理第三方插件 API
+- 接入 LuckPerms、Multiverse-Core、PlayerTitle、SkinsRestorer、Residence、AuthMe 六个插件
+- 新增 30+ HTTP 管理端点
+- 修复 shadowJar 打包依赖文件重复问题
+- 完善文档结构
+
+### v1.0.0 (2026-06-20)
+- 初始版本：新增基础 HTTP API（execute、ban、unban、status、players、kick、broadcast、stop、restart）
+
 ## 注意
 
-本项目使用AI开发，如有抵触请勿使用，本项目安全性有待考量
+本项目使用 AI 开发，如有抵触请勿使用，本项目安全性有待考量。
 
 ## 作者
 

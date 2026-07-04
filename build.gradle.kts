@@ -4,13 +4,33 @@ plugins {
 }
 
 group = "top.blym"
-version = "1.0.0"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
     maven {
         name = "papermc"
         url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
+    maven {
+        name = "onarandombox"
+        url = uri("https://repo.onarandombox.com/content/groups/public/")
+    }
+    maven {
+        name = "handyplus"
+        url = uri("https://nexus.handyplus.cn/releases")
+    }
+    maven {
+        name = "codemc"
+        url = uri("https://repo.codemc.org/repository/maven-public/")
+    }
+    maven {
+        name = "jitpack"
+        url = uri("https://jitpack.io")
+    }
+    maven {
+        name = "mikeprimm"
+        url = uri("https://repo.mikeprimm.com/")
     }
 }
 
@@ -19,6 +39,13 @@ dependencies {
     implementation("org.eclipse.jetty:jetty-server:11.0.24")
     implementation("org.eclipse.jetty:jetty-servlet:11.0.24")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    compileOnly("net.luckperms:api:5.4")
+    compileOnly("com.onarandombox.multiversecore:Multiverse-Core:4.3.0")
+    compileOnly("com.handy.playertitle:PlayerTitle:4.8.0")
+    compileOnly("net.skinsrestorer:skinsrestorer-api:15.10.0")
+    compileOnly("com.github.Zrips:Residence:6.0.0.1")
+    // AuthMeReloaded API (使用 JitPack)
+    compileOnly("com.github.authme:authmereloaded:5.6.0-beta2")
 }
 
 java {

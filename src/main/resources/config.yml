@@ -25,6 +25,53 @@ endpoints:
   stop: true
   restart: true
 
+  # LuckPerms 端点
+  luckperms: true
+  luckperms_check: true
+  luckperms_groups: true
+
+  # Multiverse-Core 端点
+  multiverse: true
+  multiverse_worlds: true
+  multiverse_world_create: true
+
+  # PlayerTitle 端点
+  playertitle: true
+  playertitle_get: true
+  playertitle_grant: true
+
+  # SkinsRestorer 端点
+  skins: true
+  skins_set: true
+
+  # Residence 端点
+  residence: true
+  residence_check: true
+
+  # AuthMe 端点
+  authme_registered: true
+  authme_authenticated: true
+  authme_register: true
+  authme_logout: true
+
+  # LuckPerms 管理端点
+  luckperms_admin: true
+
+  # Multiverse-Core 管理端点
+  multiverse_admin: true
+
+  # PlayerTitle 管理端点
+  playertitle_admin: true
+
+  # SkinsRestorer 管理端点
+  skins_admin: true
+
+  # Residence 管理端点
+  residence_admin: true
+
+  # AuthMe 管理端点
+  authme_admin: true
+
 # ========== 跨域 ==========
 cors:
   enabled: false
